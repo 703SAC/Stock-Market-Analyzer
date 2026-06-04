@@ -1,0 +1,21 @@
+.env
+.env.*
+!.env.example
+
+# 로컬 DB·캐시
+**/data/
+*.sqlite
+*.sqlite3
+
+# Python / Node
+__pycache__/
+.pytest_cache/
+.venv/
+node_modules/
+.next/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
