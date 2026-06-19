@@ -81,7 +81,7 @@ def test_openai_not_configured_without_key(mock_settings):
 def test_google_not_configured_without_key(mock_settings):
     mock_settings.return_value = MagicMock(
         google_api_key="",
-        llm_model_resolved="gemini-2.0-flash",
+        llm_model_resolved="gemini-3.5-flash",
     )
     from services.llm.google_provider import GoogleLlmProvider
 
@@ -128,7 +128,7 @@ async def test_openai_generate_parses_json(mock_settings):
 async def test_google_generate_parses_json(mock_settings, mock_to_thread):
     mock_settings.return_value = MagicMock(
         google_api_key="test-key",
-        llm_model_resolved="gemini-2.0-flash",
+        llm_model_resolved="gemini-3.5-flash",
     )
     payload = {
         "summary": "gemini 요약",

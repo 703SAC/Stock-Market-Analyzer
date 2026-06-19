@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
+  getHealth,
   getScreenerEvents,
   screenerCsvUrl,
   type StockEvent,
@@ -20,10 +21,19 @@ export default function ScreenerPage() {
   const [events, setEvents] = useState<StockEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [kisConfigured, setKisConfigured] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    getHealth()
+      .then((h) => setKisConfigured(Boolean(h.kis?.configured)))
+      .catch(() => setKisConfigured(null));
+  }, []);
 
   async function handleSearch() {
     setLoading(true);
     setError(null);
+    setHasSearched(true);
     try {
       const res = await getScreenerEvents({
         start_date: startDate,
@@ -99,7 +109,17 @@ export default function ScreenerPage() {
       {error && <p className="error">{error}</p>}
 
       {events.length === 0 && !loading && !error && (
-        <p className="loading">조건을 입력하고 조회하세요.</p>
+        <p className="loading">
+          {hasSearched
+            ? "조회 결과가 없습니다. 날짜 범위를 넓히거나 최소 거래량을 낮춰보세요."
+            : "조건을 입력하고 조회하세요."}
+        </p>
+      )}
+
+      {hasSearched && events.length === 0 && !loading && !error && kisConfigured === false && (
+        <p className="error" style={{ marginTop: "0.5rem" }}>
+          KIS 설정이 완료되지 않아 실데이터 조회가 비어 있을 수 있습니다. 먼저 /api/health의 KIS 상태를 확인하세요.
+        </p>
       )}
 
       {events.length > 0 && (

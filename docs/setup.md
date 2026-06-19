@@ -62,6 +62,18 @@ uvicorn main:app --reload --port 8001
 - 토큰 파일 (`~/KIS/config/KISYYYYMMDD`)
 - 민감정보는 로그·API 응답에 노출하지 않음
 
+### KIS 설정 암호화
+
+백엔드는 `kis_devlp.yaml`의 값이 `enc:v1:...` 형식이면 런타임에 자동 복호화해서 KIS 샘플 모듈에 전달합니다.
+
+```bash
+cd app/backend
+python scripts/secure_config.py generate-key
+python scripts/secure_config.py encrypt-kis --kis-config ~/KIS/config/kis_devlp.yaml
+```
+
+`.secret.key`는 로컬 전용이며 Git에 포함하지 않습니다. 서버에서는 파일 대신 OS 환경 변수 `SECRET_ENCRYPTION_KEY`로 같은 키를 주입해도 됩니다.
+
 ## 3. Naver 검색 API (뉴스)
 
 1. [Naver Developers](https://developers.naver.com/)에서 애플리케이션 등록
@@ -102,10 +114,10 @@ LLM_MODEL=gpt-4o-mini
 ```env
 LLM_PROVIDER=google
 GOOGLE_API_KEY=your_aistudio_api_key
-LLM_MODEL=gemini-2.0-flash
+LLM_MODEL=gemini-3.5-flash
 ```
 
-`LLM_MODEL`을 비우면 `gemini-2.0-flash`가 기본값입니다.
+`LLM_MODEL`을 비우면 `gemini-3.5-flash`가 기본값입니다.
 
 OpenAI 키와 Google 키를 **둘 다 넣어도** 실제로 쓰는 쪽은 `LLM_PROVIDER` 하나뿐입니다.
 
@@ -130,6 +142,16 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 
 ## 6. 보안
 
-- API 키는 백엔드 `.env`에만 둡니다.
+- API 키는 백엔드 `.env`에만 둡니다. 저장 시에는 `enc:v1:...` 암호화 값을 권장합니다.
 - 프론트엔드에 KIS/LLM/Naver 키를 넣지 않습니다.
 - `kis-ai-extensions` secret guard / prod guard 개념을 CI·에이전트 규칙에 반영하세요.
+
+### `.env` 토큰 암호화
+
+```bash
+cd app/backend
+python scripts/secure_config.py generate-key     # 최초 1회
+python scripts/secure_config.py encrypt-env --env-file ../../.env
+```
+
+암호화 대상은 `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`, `OPENDART_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`, `ANTHROPIC_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`입니다. 앱은 `config.Settings` 로딩 시 자동 복호화해서 기존 코드와 동일하게 사용합니다.

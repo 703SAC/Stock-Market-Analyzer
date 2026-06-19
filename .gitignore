@@ -1,6 +1,7 @@
 .env
 .env.*
 !.env.example
+.secret.key
 
 # 로컬 DB·캐시
 **/data/

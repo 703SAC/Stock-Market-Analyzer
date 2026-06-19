@@ -13,7 +13,8 @@ from types import ModuleType
 import requests
 import yaml
 
-from config import get_settings
+from config import WORKSPACE_ROOT, get_settings
+from core.secret_crypto import decrypt_config_values
 from services.kis.kis_loader import _ensure_paths
 
 logger = logging.getLogger(__name__)
@@ -51,7 +52,8 @@ def _reload_kis_config(ka: ModuleType, svr: str) -> Path | None:
     ka.config_root = config_root
     ka.token_tmp = _token_path(config_root, svr)
     with open(path, encoding="UTF-8") as f:
-        ka._cfg = yaml.load(f, Loader=yaml.FullLoader)
+        cfg = yaml.load(f, Loader=yaml.FullLoader) or {}
+    ka._cfg = decrypt_config_values(cfg, WORKSPACE_ROOT)
     return path
 
 

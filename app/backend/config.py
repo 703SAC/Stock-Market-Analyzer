@@ -3,7 +3,10 @@
 from functools import lru_cache
 from pathlib import Path
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+from core.secret_crypto import decrypt_config_values
 
 WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
 OPEN_TRADING_API_ROOT = WORKSPACE_ROOT / "open-trading-api"
@@ -38,6 +41,11 @@ class Settings(BaseSettings):
     scheduler_enabled: bool = False
     market_tz: str = "Asia/Seoul"
 
+    @model_validator(mode="before")
+    @classmethod
+    def decrypt_encrypted_values(cls, values):
+        return decrypt_config_values(values, WORKSPACE_ROOT)
+
     @property
     def kis_config_resolved(self) -> Path | None:
         if self.kis_config_path:
@@ -57,7 +65,7 @@ class Settings(BaseSettings):
             return self.llm_model.strip()
         provider = (self.llm_provider or "openai").lower().strip()
         if provider == "google":
-            return "gemini-2.0-flash"
+            return "gemini-3.5-flash"
         if provider == "anthropic":
             return "claude-sonnet-4-6"
         return "gpt-4o-mini"
