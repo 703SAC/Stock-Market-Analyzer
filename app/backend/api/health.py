@@ -30,17 +30,13 @@ def _llm_missing_env(settings) -> list[str]:
 
     if provider == "google":
 
-        if not settings.google_api_key:
+        return [] if settings.google_api_key else ["GOOGLE_API_KEY"]
 
-            return ["GOOGLE_API_KEY"]
+    if provider == "anthropic":
 
-        return []
+        return [] if settings.anthropic_api_key else ["ANTHROPIC_API_KEY"]
 
-    if not settings.openai_api_key:
-
-        return ["OPENAI_API_KEY"]
-
-    return []
+    return [] if settings.openai_api_key else ["OPENAI_API_KEY"]
 
 
 

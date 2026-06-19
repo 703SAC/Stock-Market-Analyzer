@@ -7,13 +7,38 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from api.router import api_router
 from config import get_settings
-from storage.db import init_db
+from storage.db import SessionLocal, init_db
+
+
+async def _run_daily_close(session: str) -> None:
+    """스케줄러 콜백: 모니터링 에이전트 일일 마감 리포트 실행."""
+    from datetime import date
+
+    from features.monitor.service import monitor_service
+
+    db = SessionLocal()
+    try:
+        await monitor_service.run_daily_close(db, date.today(), session=session)  # type: ignore[arg-type]
+    finally:
+        db.close()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
-    yield
+    settings = get_settings()
+    scheduler = None
+    if settings.scheduler_enabled:
+        from services.scheduler import build_scheduler
+
+        scheduler = build_scheduler(_run_daily_close, tz=settings.market_tz)
+        scheduler.start()
+        app.state.scheduler = scheduler
+    try:
+        yield
+    finally:
+        if scheduler is not None:
+            scheduler.shutdown(wait=False)
 
 
 def create_app() -> FastAPI:

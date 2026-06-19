@@ -17,5 +17,19 @@ class ConditionDsl(BaseModel):
 
 
 ALLOWED_INDICATORS = frozenset(
-    {"volume", "close", "open", "high", "low", "ma20", "ma60", "rsi14", "change_rate"}
+    {
+        "volume",
+        "close",
+        "open",
+        "high",
+        "low",
+        "ma5",
+        "ma20",
+        "ma60",
+        "rsi14",
+        "change_rate",
+        "volume_change_rate",
+    }
 )
+
+ALLOWED_OPS = frozenset({">", "<", ">=", "<=", "=="})

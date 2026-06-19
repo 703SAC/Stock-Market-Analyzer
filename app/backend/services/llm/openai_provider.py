@@ -3,10 +3,10 @@
 import json
 
 from openai import AsyncOpenAI
+from pydantic import BaseModel
 
 from config import get_settings
 from services.llm.base import LlmProvider
-from services.llm.schemas import NewsPriceReportJson
 
 
 class OpenAiLlmProvider(LlmProvider):
@@ -31,9 +31,9 @@ class OpenAiLlmProvider(LlmProvider):
     def model_name(self) -> str:
         return self._model
 
-    async def generate_news_price_report(
-        self, system_prompt: str, user_prompt: str
-    ) -> NewsPriceReportJson:
+    async def generate_structured(
+        self, system_prompt: str, user_prompt: str, schema: type[BaseModel]
+    ) -> BaseModel:
         if not self.is_configured:
             raise RuntimeError("OPENAI_API_KEY is not configured")
 
@@ -50,8 +50,7 @@ class OpenAiLlmProvider(LlmProvider):
                     temperature=0.3,
                 )
                 content = response.choices[0].message.content or "{}"
-                data = json.loads(content)
-                return NewsPriceReportJson.model_validate(data)
+                return schema.model_validate(json.loads(content))
             except Exception as exc:
                 last_error = exc
         raise RuntimeError(f"LLM response validation failed: {last_error}")

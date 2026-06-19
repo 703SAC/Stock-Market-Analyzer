@@ -26,19 +26,42 @@
 
 ## 빠른 시작
 
+### Backend — uv (권장, 타 PC 재현성)
+
+[uv](https://docs.astral.sh/uv/)는 `requires-python`을 보고 인터프리터를 자동 선택/설치하고
+`uv.lock`으로 동일 환경을 재현한다.
+
 ```bash
-# Backend
+cd app/backend
+uv sync                              # .venv 생성 + 잠긴 의존성 설치
+uv run pytest -q                     # 테스트
+uv run uvicorn main:app --reload --port 8000
+```
+
+### Backend — pip (대안)
+
+```bash
 cd app/backend
 python -m venv .venv
 .venv\Scripts\activate
 pip install -r requirements.txt
 uvicorn main:app --reload --port 8000
+```
 
-# Frontend
+> ⚠️ 일부 Windows에서는 `python`이 Microsoft Store 스텁이라 동작하지 않는다. 이때는 `python3` 또는 uv 사용.
+
+### Frontend
+
+```bash
 cd app/frontend
 npm install
 npm run dev
 ```
+
+## 3대 에이전트 / 아키텍처
+
+에이전트 시스템 설계·진행·검증 문서는 [docs/agents/](docs/agents/) 참조
+([GOAL](docs/agents/GOAL.md) · [PLAN](docs/agents/PLAN.md) · [STATUS](docs/agents/STATUS.md) · [TEST](docs/agents/TEST.md)).
 
 자세한 설정: [docs/setup.md](docs/setup.md)
 
@@ -50,3 +73,6 @@ npm run dev
 - `GET /api/screener/events`
 - `GET /api/news/search`
 - `POST /api/reports/news-price`
+- `POST /api/strategy/causality` — 전략: 상한가/거래량 인과분석(CAN SLIM+맥락)
+- `POST /api/briefing` — 시장판단: 타임라인별 메가 내러티브 브리핑
+- `POST /api/monitor/daily-report` — 모니터링: 장마감 일일 리포트→맥락 역기록→텔레그램

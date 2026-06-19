@@ -44,8 +44,21 @@ def test_get_llm_provider_google(mock_settings):
 
 
 @patch("services.llm.base.get_settings")
-def test_get_llm_provider_unsupported(mock_settings):
+def test_get_llm_provider_anthropic_seat(mock_settings):
+    """Claude는 예약된 opt-in 자리: factory는 provider를 돌려주되 키 없으면 미설정."""
     mock_settings.return_value = MagicMock(llm_provider="anthropic")
+    from services.llm.anthropic_provider import ClaudeLlmProvider
+    from services.llm.base import get_llm_provider
+
+    provider = get_llm_provider()
+    assert isinstance(provider, ClaudeLlmProvider)
+    assert provider.provider_name == "anthropic"
+    assert provider.is_configured is False  # 기본 환경에 ANTHROPIC_API_KEY 없음
+
+
+@patch("services.llm.base.get_settings")
+def test_get_llm_provider_unsupported(mock_settings):
+    mock_settings.return_value = MagicMock(llm_provider="llama")
     from services.llm.base import get_llm_provider
 
     with pytest.raises(ValueError, match="Unsupported"):

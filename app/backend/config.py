@@ -29,10 +29,14 @@ class Settings(BaseSettings):
     llm_provider: str = "openai"
     openai_api_key: str = ""
     google_api_key: str = ""
+    anthropic_api_key: str = ""
     llm_model: str = ""
     telegram_bot_token: str = ""
     telegram_chat_id: str = ""
     cors_origins: str = "http://localhost:3000"
+    # 모니터링 에이전트 스케줄러 (기본 비활성 — 명시적 opt-in)
+    scheduler_enabled: bool = False
+    market_tz: str = "Asia/Seoul"
 
     @property
     def kis_config_resolved(self) -> Path | None:
@@ -51,8 +55,11 @@ class Settings(BaseSettings):
     def llm_model_resolved(self) -> str:
         if self.llm_model and self.llm_model.strip():
             return self.llm_model.strip()
-        if (self.llm_provider or "openai").lower().strip() == "google":
+        provider = (self.llm_provider or "openai").lower().strip()
+        if provider == "google":
             return "gemini-2.0-flash"
+        if provider == "anthropic":
+            return "claude-sonnet-4-6"
         return "gpt-4o-mini"
 
     @property

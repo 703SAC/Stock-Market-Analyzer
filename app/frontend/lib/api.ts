@@ -132,3 +132,57 @@ export async function createNewsPriceReport(body: {
 export async function getReport(reportId: string): Promise<AnalysisReport> {
   return fetchApi(`/api/reports/${reportId}`);
 }
+
+// --- Agent endpoints (Phase 2~5) ---
+
+export type MarketBriefing = {
+  base_date: string;
+  timeline: "PRE_MARKET" | "INTRADAY" | "CLOSE";
+  label: string;
+  content: {
+    headline: string;
+    market_summary: string;
+    key_narratives: string[];
+    sector_highlights: string[];
+    watch_items: string[];
+    risks: string[];
+    confidence: string;
+  };
+  sources: string[];
+};
+
+// 시장 판단 에이전트: 타임라인별 종합 시황 브리핑
+export async function createBriefing(body: {
+  base_date: string;
+  timeline?: "PRE_MARKET" | "INTRADAY" | "CLOSE";
+  articles?: Article[];
+}): Promise<{ briefing: MarketBriefing }> {
+  return fetchApi("/api/briefing", {
+    method: "POST",
+    body: JSON.stringify({ timeline: "CLOSE", articles: [], ...body }),
+  });
+}
+
+// 전략 에이전트: 상한가/거래량 종목 인과관계 분석
+export async function analyzeCausality(body: {
+  event: StockEvent;
+  articles?: Article[];
+  candles?: { date: string; close: number; volume?: number }[];
+}): Promise<{ report: AnalysisReport; canslim: unknown }> {
+  return fetchApi("/api/strategy/causality", {
+    method: "POST",
+    body: JSON.stringify({ articles: [], candles: [], ...body }),
+  });
+}
+
+// 모니터링 에이전트: 장마감 일일 리포트 트리거
+export async function runDailyReport(body: {
+  base_date: string;
+  session?: "KR_DAY" | "US_NIGHT" | "GLOBAL";
+  events?: StockEvent[];
+}): Promise<{ digest: unknown; telegram: unknown; persisted: boolean }> {
+  return fetchApi("/api/monitor/daily-report", {
+    method: "POST",
+    body: JSON.stringify({ session: "KR_DAY", events: [], ...body }),
+  });
+}
