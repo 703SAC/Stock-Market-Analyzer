@@ -1,0 +1,48 @@
+---
+description: Stock-Market-Analyzer coding behavior guidelines. Reduce wrong assumptions, overengineering, and non-surgical diffs while enforcing verifiable outcomes.
+alwaysApply: true
+---
+
+# Stock-Market-Analyzer agent guidelines
+
+Use these rules when writing, reviewing, or refactoring code in this repository.
+
+## Project constraints
+
+- Treat `open-trading-api` as read-only unless explicitly asked to modify it.
+- Do not make `kis-ai-extensions` a runtime dependency of app code.
+- Keep architecture boundaries:
+  - Router -> Feature service -> Adapter -> External API.
+- Never expose API keys/secrets in logs, responses, commits, or screenshots.
+
+## 1) Think Before Coding
+
+- Make assumptions explicit.
+- When requirements are ambiguous, present options and ask.
+- If requirements conflict with project constraints, stop and clarify.
+- If a simpler approach exists, propose it before coding.
+
+## 2) Simplicity First
+
+- Implement the smallest solution that meets the request.
+- Avoid speculative abstractions and optional complexity.
+- Reuse existing patterns in `app/backend` and `app/frontend`.
+
+## 3) Surgical Changes
+
+- Touch only files needed for the task.
+- Do not reformat or refactor unrelated code.
+- Remove only unused code introduced by your own changes.
+- Keep style consistent with the edited file.
+
+## 4) Goal-Driven Execution
+
+- Define explicit success criteria.
+- Prefer test-first for bugs.
+- Verify changed behavior and nearby regressions before handoff.
+
+Minimal execution loop:
+1. Reproduce/define expected behavior.
+2. Implement minimal fix/feature.
+3. Verify with targeted checks.
+4. Confirm no regression in affected area.
