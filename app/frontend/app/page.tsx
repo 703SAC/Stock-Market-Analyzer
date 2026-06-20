@@ -35,45 +35,80 @@ export default function HomePage() {
         <h2>백엔드 상태</h2>
         {error && <p className="error">{error}</p>}
         {health && (
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-            <span
-              className={`badge ${
-                health.status === "ok" ? "badge-ok" : "badge-warn"
-              }`}
-            >
-              API {health.status}
-            </span>
-            <span
-              className={`badge ${
-                health.database === "ok" ? "badge-ok" : "badge-err"
-              }`}
-            >
-              DB {health.database}
-            </span>
-            {kisBadge()}
-            <span
-              className={`badge ${
-                health.news_configured ? "badge-ok" : "badge-warn"
-              }`}
-            >
-              Naver {health.news_configured ? "ok" : "missing"}
-            </span>
-            <span
-              className={`badge ${
-                health.llm_configured ? "badge-ok" : "badge-warn"
-              }`}
-            >
-              LLM {health.llm?.provider || "openai"}{" "}
-              {health.llm_configured ? "ok" : "missing"}
-            </span>
-          </div>
+          <>
+            <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+              <span
+                className={`badge ${
+                  health.status === "ok" ? "badge-ok" : "badge-warn"
+                }`}
+              >
+                API {health.status}
+              </span>
+              <span
+                className={`badge ${
+                  health.database === "ok" ? "badge-ok" : "badge-err"
+                }`}
+              >
+                DB {health.database}
+              </span>
+              {kisBadge()}
+              <span
+                className={`badge ${
+                  health.news_configured ? "badge-ok" : "badge-warn"
+                }`}
+              >
+                Naver {health.news_configured ? "ok" : "missing"}
+              </span>
+              <span
+                className={`badge ${
+                  health.llm_configured ? "badge-ok" : "badge-warn"
+                }`}
+              >
+                LLM {health.llm?.provider || "openai"}{" "}
+                {health.llm_configured ? "ok" : "missing"}
+              </span>
+            </div>
+            {health.llm?.roles && (
+              <p className="muted" style={{ marginBottom: 0 }}>
+                flash {health.llm.roles.flash} · pro {health.llm.roles.pro} · formatter{" "}
+                {health.llm.roles.formatter}
+              </p>
+            )}
+          </>
         )}
         {!health && !error && <p className="loading">연결 중...</p>}
       </div>
 
-      <button type="button" onClick={() => router.push("/screener")}>
-        스크리너 시작
-      </button>
+      <div className="grid">
+        <div className="card">
+          <h2>스크리너</h2>
+          <p className="muted">KIS 거래량/상한가 이벤트를 찾고 뉴스·전략 분석으로 이어갑니다.</p>
+          <button type="button" onClick={() => router.push("/screener")}>
+            열기
+          </button>
+        </div>
+        <div className="card">
+          <h2>시장판단</h2>
+          <p className="muted">장전, 장중, 마감 브리핑을 생성합니다.</p>
+          <button type="button" onClick={() => router.push("/briefing")}>
+            열기
+          </button>
+        </div>
+        <div className="card">
+          <h2>전략</h2>
+          <p className="muted">특징주 이벤트의 인과관계와 CAN SLIM 정량 조건을 확인합니다.</p>
+          <button type="button" onClick={() => router.push("/strategy")}>
+            열기
+          </button>
+        </div>
+        <div className="card">
+          <h2>모니터링</h2>
+          <p className="muted">일일 마감 리포트를 생성하고 맥락 저장소에 기록합니다.</p>
+          <button type="button" onClick={() => router.push("/monitor")}>
+            열기
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

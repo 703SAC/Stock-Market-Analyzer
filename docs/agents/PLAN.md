@@ -40,8 +40,9 @@
 - Telegram adapter 실구현(timeout/retry) + 중복발송 방지
 - **완료기준**: 스케줄 발화·텔레그램 발송 mock 테스트, 마감→저장→익일주입 E2E → **그린**
 
-## Phase 5 — 마감: Claude 자리 예약 + 통합검증 ✅ (소~중)
-- LLM factory `anthropic` 자리 예약(기본 비활성, Gemini 유지)
+## Phase 5 — 마감: 고급 LLM 슬롯 + 통합검증 ✅ (소~중)
+- LLM factory legacy `anthropic` 슬롯을 Gemini 3.5 Flash 고급 모드로 매핑
+- OpenRouter provider와 flash/pro/formatter/rerank role 라우팅 추가
 - API 라우트 3종 + 프론트 api.ts 최소 연결
 - 3대 에이전트 통합 E2E(mock), uv 환경 구성, 문서 최종 갱신
 - **완료기준**: 통합 루프 E2E 그린, `uv run pytest` 59 passed

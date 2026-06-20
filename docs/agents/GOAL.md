@@ -6,7 +6,7 @@
 퀀트 + AI 트레이딩 데스크를 구축하는 수석 아키텍트. 출처: [PROMPT.md](../../PROMPT.md).
 
 ## 1. 불변 원칙 (Non-negotiables)
-1. **비용 0원 우선**: 메인 분석은 무료 티어 `Gemini`(google-genai). KIS·Naver·RSS·Telegram 모두 무료 경로. 유료(Claude)는 자리만 예약하고 기본 비활성.
+1. **비용 0원 우선**: 기본 경로는 OpenRouter free 모델 하이브리드(Flash/Pro/Formatter/Rerank) 또는 Google Gemini free-tier. KIS·Naver·RSS·Telegram 모두 무료 경로 우선.
 2. **환각 제로 (정량/정성 분리)**: 주가·거래량·기술지표·CAN SLIM 조건식은 **절대 LLM에 맡기지 않고 Pandas 수식으로 선필터링**. LLM은 정성 해석(JSON Schema 강제)만 담당.
 3. **맥락 주입 (메가 내러티브)**: 당일 뉴스 파편이 아니라 `[종합 시황]·[일정]·[그룹사/테마 역학]`을 누적 저장소에서 주입해 "숲"을 본다.
 4. **Adapter 경계**: Router → Feature service → Adapter → External API. `open-trading-api` 수정 금지, `kis-ai-extensions` 런타임 import 금지.

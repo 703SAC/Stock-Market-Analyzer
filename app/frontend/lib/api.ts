@@ -3,10 +3,22 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 export type HealthResponse = {
   status: string;
   database: string;
-  kis: { status: string; configured: boolean; smoke?: { status: string } };
+  app_env?: string;
+  kis: {
+    status: string;
+    configured: boolean;
+    token_file_exists?: boolean;
+    smoke?: { status: string; message?: string };
+  };
   news_configured: boolean;
-  llm?: { provider: string; configured: boolean; model: string };
+  llm?: {
+    provider: string;
+    configured: boolean;
+    model: string;
+    roles?: Record<string, string>;
+  };
   llm_configured: boolean;
+  missing_optional_env?: string[];
 };
 
 export type StockEvent = {
@@ -41,6 +53,56 @@ export type AnalysisReport = {
   confidence: string;
   sources: string[];
   article_urls: string[];
+};
+
+export type MarketSession = "KR_DAY" | "US_NIGHT" | "GLOBAL";
+
+export type MarketDigest = {
+  id?: string;
+  digest_date: string;
+  session: MarketSession;
+  title: string;
+  summary: string;
+  key_themes: string[];
+  indices: Record<string, number>;
+  source: string;
+};
+
+export type CalendarEvent = {
+  id?: string;
+  event_date: string;
+  category: string;
+  title: string;
+  stock_code?: string;
+  description?: string;
+  importance: "LOW" | "MEDIUM" | "HIGH";
+};
+
+export type GroupMapEntry = {
+  stock_code: string;
+  stock_name?: string;
+  group_name?: string;
+  themes: string[];
+  related_codes: string[];
+};
+
+export type NarrativeMemory = {
+  id?: string;
+  as_of_date: string;
+  topic: string;
+  narrative: string;
+  stock_codes: string[];
+  importance: "LOW" | "MEDIUM" | "HIGH";
+};
+
+export type MarketContext = {
+  base_date: string;
+  stock_code?: string;
+  recent_digests: MarketDigest[];
+  relevant_events: CalendarEvent[];
+  group?: GroupMapEntry;
+  peer_group: GroupMapEntry[];
+  narratives: NarrativeMemory[];
 };
 
 async function fetchApi<T>(path: string, init?: RequestInit): Promise<T> {
@@ -151,6 +213,18 @@ export type MarketBriefing = {
   sources: string[];
 };
 
+export type CanSlimResult = {
+  stock: { code: string; name?: string; market?: string };
+  as_of: string;
+  checks: Record<string, boolean>;
+  score: number;
+  max_score: number;
+  passed: boolean;
+  metrics: Record<string, number>;
+  reasons: string[];
+  pending_fundamentals: string[];
+};
+
 // 시장 판단 에이전트: 타임라인별 종합 시황 브리핑
 export async function createBriefing(body: {
   base_date: string;
@@ -168,7 +242,7 @@ export async function analyzeCausality(body: {
   event: StockEvent;
   articles?: Article[];
   candles?: { date: string; close: number; volume?: number }[];
-}): Promise<{ report: AnalysisReport; canslim: unknown }> {
+}): Promise<{ report: AnalysisReport; canslim: CanSlimResult | null }> {
   return fetchApi("/api/strategy/causality", {
     method: "POST",
     body: JSON.stringify({ articles: [], candles: [], ...body }),
@@ -178,11 +252,45 @@ export async function analyzeCausality(body: {
 // 모니터링 에이전트: 장마감 일일 리포트 트리거
 export async function runDailyReport(body: {
   base_date: string;
-  session?: "KR_DAY" | "US_NIGHT" | "GLOBAL";
+  session?: MarketSession;
   events?: StockEvent[];
-}): Promise<{ digest: unknown; telegram: unknown; persisted: boolean }> {
+}): Promise<{ digest: MarketDigest; telegram: Record<string, unknown>; persisted: boolean }> {
   return fetchApi("/api/monitor/daily-report", {
     method: "POST",
     body: JSON.stringify({ session: "KR_DAY", events: [], ...body }),
   });
+}
+
+export async function getContextOverview(params: {
+  base_date: string;
+  session?: MarketSession | "";
+}): Promise<{
+  digests: MarketDigest[];
+  events: CalendarEvent[];
+  narratives: NarrativeMemory[];
+}> {
+  const q = new URLSearchParams({ base_date: params.base_date });
+  if (params.session) q.set("session", params.session);
+  return fetchApi(`/api/context/overview?${q}`);
+}
+
+export async function getStockContext(params: {
+  stock_code: string;
+  base_date: string;
+}): Promise<{ context: MarketContext; prompt_block: string }> {
+  const q = new URLSearchParams({ base_date: params.base_date });
+  return fetchApi(`/api/context/stock/${params.stock_code}?${q}`);
+}
+
+export async function getContextDigests(params: {
+  before_date: string;
+  session?: MarketSession | "";
+  limit?: number;
+}): Promise<{ digests: MarketDigest[] }> {
+  const q = new URLSearchParams({
+    before_date: params.before_date,
+    limit: String(params.limit || 10),
+  });
+  if (params.session) q.set("session", params.session);
+  return fetchApi(`/api/context/digests?${q}`);
 }

@@ -1,7 +1,7 @@
 # STATUS — 살아있는 구현 상태표
 
 > 범례: 🟢 작동/검증 · 🟡 부분 · 🔴 미구현/스텁. 갱신일은 작업 시점 기준.
-> 최종 갱신: 2026-06-19 (Phase 0~5 완료)
+> 최종 갱신: 2026-06-20 (Phase 0~5 + Frontend Agent UI + OpenRouter role routing 완료)
 
 ## 환경
 | 항목 | 상태 | 비고 |
@@ -9,7 +9,7 @@
 | Python 런타임 | 🟢 | `python3` = 3.14.6. `python`/`py`는 Windows Store 스텁이라 작동 안 함 |
 | uv 환경 | 🟢 | `app/backend/pyproject.toml` + `uv.lock`(1916줄, 크로스플랫폼). `uv sync`/`uv run pytest`로 타 PC 재현 |
 | 검증 venv | 🟢 | `app/backend/.venv` = uv 관리(gitignore 대상) |
-| 테스트 결과 | 🟢 | `59 passed`, 2026-06-19 `uv run pytest` 실행 |
+| 테스트 결과 | 🟢 | `64 passed`, 2026-06-20 `python -m pytest` 실행 |
 | FastAPI 앱 | 🟢 | `create_app()` 정상, 신규 3개 에이전트 라우트 OpenAPI 등록 확인 |
 | SQLite/SQLAlchemy | 🟢 | `storage/db.py` 작동 |
 
@@ -31,11 +31,15 @@
 | ① 모니터링 | 일일 마감 리포트 파이프라인 | 🟢 | `features/monitor/service.py` | Phase4, **종합시황을 맥락저장소에 역기록(루프 닫음)** |
 | ① 모니터링 | Telegram 발송 | 🟢 | `services/telegram/adapter.py` | Phase4, httpx+timeout/retry+dedupe |
 | LLM | 구조화 출력 추상화 | 🟢 | `services/llm/base.py` | Phase2, `generate_structured(schema)` |
-| LLM | Gemini provider | 🟢 | `services/llm/google_provider.py` | 메인(무료) |
+| LLM | Role 기반 LLM 라우터 | 🟢 | `services/llm/{base,model_registry}.py` | flash/pro/formatter/rerank |
+| LLM | OpenRouter provider | 🟢 | `services/llm/openrouter_provider.py` | 역할별 free 모델 slug 설정 |
+| LLM | Gemini provider | 🟢 | `services/llm/google_provider.py` | Google AI Studio 선택 경로 |
 | LLM | OpenAI provider | 🟢 | `services/llm/openai_provider.py` | |
-| LLM | Claude(anthropic) provider | 🟢 | `services/llm/anthropic_provider.py` | Phase5, opt-in 자리(기본 비활성) |
+| LLM | Legacy anthropic 슬롯 | 🟢 | `services/llm/base.py` | Claude 대신 Gemini 3.5 Flash로 매핑 |
 | API | 에이전트 라우트 3종 | 🟢 | `api/{strategy,briefing,monitor}.py` | Phase5 |
-| Frontend | api.ts 에이전트 클라이언트 | 🟢 | `app/frontend/lib/api.ts` | Phase5, 최소 연결 |
+| Frontend | api.ts 에이전트 클라이언트 | 🟢 | `app/frontend/lib/api.ts` | briefing/strategy/monitor/context 연결 |
+| Frontend | 에이전트 UI 4종 | 🟢 | `app/frontend/app/{briefing,strategy,monitor,context}` | 브라우저에서 3대 에이전트와 맥락 저장소 테스트 가능 |
+| API | 맥락 저장소 조회 라우트 | 🟢 | `api/context.py` | digest/event/stock context/overview 조회 |
 
 ## Phase 진행
 | Phase | 상태 | 비고 |
@@ -45,4 +49,5 @@
 | 2 전략 에이전트 | 🟢 완료 | 지표/평가/CAN SLIM/인과 + LLM 추상화, 테스트 그린 |
 | 3 시장판단 에이전트 | 🟢 완료 | 추출기/RSS/타임라인 브리핑, 테스트 그린 |
 | 4 모니터링+자동화 | 🟢 완료 | APScheduler·텔레그램·마감리포트→역기록, 테스트 그린 |
-| 5 Claude 자리예약+통합 | 🟢 완료 | anthropic 자리, API 라우트, 통합 E2E(루프), uv 환경 |
+| 5 고급 LLM 슬롯+통합 | 🟢 완료 | OpenRouter role routing + Google 선택 경로, API 라우트, 통합 E2E(루프), uv 환경 |
+| F 에이전트 프론트 연결 | 🟢 완료 | briefing/strategy/monitor/context 화면, 스크리너→전략/모니터 이동 |

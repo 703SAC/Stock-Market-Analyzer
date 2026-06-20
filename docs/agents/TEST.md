@@ -11,7 +11,8 @@ uv run pytest -q        # 전체 테스트
 uv run pytest tests/test_integration_loop.py -v   # 특정 모듈
 ```
 대안(pip): `./.venv/Scripts/python.exe -m pytest -q`
-> ✅ 최근 실행(2026-06-19, `uv run pytest`): `59 passed` (P0:11 + P1:10 + P2:13 + P3:14 + P4~5:11).
+> ✅ 최근 실행(2026-06-20, `python -m pytest`): `64 passed`.
+> ✅ Frontend 최근 실행(2026-06-20, `npm run build`): 성공.
 
 ## 테스트 인벤토리
 | 파일 | 대상 | 상태 |
@@ -64,8 +65,9 @@ uv run pytest tests/test_integration_loop.py -v   # 특정 모듈
 - [x] 일일 마감 리포트: 특징주 로그→Gemini→MarketDigest **맥락저장소 역기록**→텔레그램
 - [x] main.py lifespan에서 `SCHEDULER_ENABLED` opt-in 기동
 
-### Phase 5 — Claude 자리예약 + 통합
-- [x] anthropic provider 자리(기본 비활성, 키 없으면 is_configured=False), factory/health/테스트 정합
+### Phase 5 — 고급 LLM 슬롯 + 통합
+- [x] legacy anthropic 슬롯을 Gemini 3.5 Flash 고급 모드로 매핑, factory/health/테스트 정합
+- [x] OpenRouter provider mock 테스트, role별 모델 선택, JSON Schema request body 검증
 - [x] API 라우트 3종(strategy/briefing/monitor) OpenAPI 등록 확인
 - [x] **통합 E2E**: 모니터링이 쓴 6/18 digest가 6/19 브리핑 맥락에 주입됨(루프 확인)
 - [x] uv 환경(`uv sync`/`uv run pytest`)로 타 PC 재현 검증

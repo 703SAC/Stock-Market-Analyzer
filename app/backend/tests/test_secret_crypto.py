@@ -46,7 +46,6 @@ def test_settings_decrypts_encrypted_env_values(monkeypatch):
     monkeypatch.setenv("SECRET_ENCRYPTION_KEY", _test_key())
     encrypted = encrypt_secret("naver-secret")
 
-    settings = Settings(naver_client_secret=encrypted)
+    settings = Settings(naver_client_secret=encrypted, _env_file=None)
 
     assert settings.naver_client_secret == "naver-secret"
-

@@ -92,11 +92,31 @@ python scripts/secure_config.py encrypt-kis --kis-config ~/KIS/config/kis_devlp.
 
 401이면 스택 대신 API가 `401`과 안내 메시지를 반환합니다.
 
-## 4. LLM 보고서 (OpenAI 또는 Google AI Studio)
+## 4. LLM 보고서 (OpenRouter 또는 Google AI Studio)
 
 `LLM_PROVIDER`로 사용할 서비스를 하나만 선택합니다.
 
-### OpenAI (기본)
+### OpenRouter (역할별 모델 라우팅)
+
+```env
+LLM_PROVIDER=openrouter
+OPENROUTER_API_KEY=your_openrouter_api_key
+LLM_FLASH_MODEL=meta-llama/llama-3.2-3b-instruct:free
+LLM_PRO_MODEL=meta-llama/llama-3.3-70b-instruct:free
+LLM_FORMATTER_MODEL=qwen/qwen3-coder-480b-a35b:free
+LLM_RERANK_MODEL=nvidia/llama-nemotron-rerank-vl-1b-v2:free
+```
+
+역할별 용도:
+
+- `flash`: 모니터링/속보/짧은 요약
+- `pro`: 시장판단 브리핑, 전략 인과분석, 심층 리포트
+- `formatter`: JSON/정형화 fallback
+- `rerank`: 뉴스 후보 재정렬용 모델 슬롯
+
+OpenRouter 모델 slug는 자주 바뀔 수 있으므로 `/api/health`의 `llm.roles`에서 현재 적용값을 확인하세요.
+
+### OpenAI
 
 ```env
 LLM_PROVIDER=openai
@@ -114,10 +134,12 @@ LLM_MODEL=gpt-4o-mini
 ```env
 LLM_PROVIDER=google
 GOOGLE_API_KEY=your_aistudio_api_key
-LLM_MODEL=gemini-3.5-flash
+LLM_MODEL=gemini-2.5-flash
 ```
 
-`LLM_MODEL`을 비우면 `gemini-3.5-flash`가 기본값입니다.
+`LLM_MODEL`을 비우면 `gemini-2.5-flash`가 기본값입니다.
+
+고급 분석용 legacy 슬롯은 `LLM_PROVIDER=anthropic`으로 유지하되, 실제 호출은 Claude가 아니라 같은 `GOOGLE_API_KEY`를 사용하는 `gemini-3.5-flash`로 처리합니다.
 
 OpenAI 키와 Google 키를 **둘 다 넣어도** 실제로 쓰는 쪽은 `LLM_PROVIDER` 하나뿐입니다.
 
@@ -154,4 +176,4 @@ python scripts/secure_config.py generate-key     # 최초 1회
 python scripts/secure_config.py encrypt-env --env-file ../../.env
 ```
 
-암호화 대상은 `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`, `OPENDART_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`, `ANTHROPIC_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`입니다. 앱은 `config.Settings` 로딩 시 자동 복호화해서 기존 코드와 동일하게 사용합니다.
+암호화 대상은 `NAVER_CLIENT_ID`, `NAVER_CLIENT_SECRET`, `OPENDART_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`, `OPENROUTER_API_KEY`, `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID`입니다. 앱은 `config.Settings` 로딩 시 자동 복호화해서 기존 코드와 동일하게 사용합니다.

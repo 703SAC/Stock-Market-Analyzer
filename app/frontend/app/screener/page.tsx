@@ -153,11 +153,23 @@ export default function ScreenerPage() {
                   </td>
                   <td>{ev.price?.toLocaleString() ?? "-"}</td>
                   <td>
-                    <Link
-                      href={`/news?stock_code=${ev.stock.code}&stock_name=${encodeURIComponent(ev.stock.name || "")}&base_date=${ev.trade_date}`}
-                    >
-                      기사
-                    </Link>
+                    <div className="link-actions">
+                      <Link
+                        href={`/news?stock_code=${ev.stock.code}&stock_name=${encodeURIComponent(ev.stock.name || "")}&base_date=${ev.trade_date}`}
+                      >
+                        기사
+                      </Link>
+                      <Link
+                        href={`/strategy?stock_code=${ev.stock.code}&stock_name=${encodeURIComponent(ev.stock.name || "")}&trade_date=${ev.trade_date}&price=${ev.price || ""}&change_rate=${ev.change_rate || ""}&volume=${ev.volume || ""}&event_type=${encodeURIComponent(ev.event_types[0] || "HIGH_VOLUME")}`}
+                      >
+                        전략
+                      </Link>
+                      <Link
+                        href={`/monitor?stock_code=${ev.stock.code}&stock_name=${encodeURIComponent(ev.stock.name || "")}&trade_date=${ev.trade_date}&price=${ev.price || ""}&change_rate=${ev.change_rate || ""}&volume=${ev.volume || ""}&event_type=${encodeURIComponent(ev.event_types[0] || "HIGH_VOLUME")}`}
+                      >
+                        모니터
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               ))}
