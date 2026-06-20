@@ -66,6 +66,20 @@ export default function HomePage() {
               LLM {health.llm?.provider || "openai"}{" "}
               {health.llm_configured ? "ok" : "missing"}
             </span>
+            <span
+              className={`badge ${
+                health.telegram_configured ? "badge-ok" : "badge-warn"
+              }`}
+            >
+              Telegram {health.telegram_configured ? "ok" : "missing"}
+            </span>
+            <span
+              className={`badge ${
+                health.scheduler_enabled ? "badge-ok" : "badge-warn"
+              }`}
+            >
+              Scheduler {health.scheduler_enabled ? "on" : "off"}
+            </span>
           </div>
         )}
         {!health && !error && <p className="loading">연결 중...</p>}

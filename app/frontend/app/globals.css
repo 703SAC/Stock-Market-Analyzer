@@ -159,3 +159,39 @@ th {
 .loading {
   color: var(--muted);
 }
+
+.muted {
+  color: var(--muted);
+}
+
+.tabs {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.tab {
+  background: var(--border);
+  color: var(--text);
+}
+
+.tab.active {
+  background: var(--accent);
+}
+
+.notice {
+  color: var(--muted);
+  font-size: 0.8rem;
+  margin-top: 0.75rem;
+}
+
+.list-tight {
+  margin: 0.25rem 0 0;
+  padding-left: 1.1rem;
+}
+
+.disclaimer {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 0.75rem;
+}

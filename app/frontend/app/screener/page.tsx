@@ -152,11 +152,17 @@ export default function ScreenerPage() {
                     {ev.change_rate != null ? `${ev.change_rate}%` : "-"}
                   </td>
                   <td>{ev.price?.toLocaleString() ?? "-"}</td>
-                  <td>
+                  <td style={{ whiteSpace: "nowrap" }}>
                     <Link
                       href={`/news?stock_code=${ev.stock.code}&stock_name=${encodeURIComponent(ev.stock.name || "")}&base_date=${ev.trade_date}`}
                     >
                       기사
+                    </Link>
+                    {" · "}
+                    <Link
+                      href={`/strategy?stock_code=${ev.stock.code}&stock_name=${encodeURIComponent(ev.stock.name || "")}&base_date=${ev.trade_date}&event_types=${encodeURIComponent(ev.event_types.join(","))}&volume=${ev.volume ?? ""}&change_rate=${ev.change_rate ?? ""}&price=${ev.price ?? ""}`}
+                    >
+                      인과분석
                     </Link>
                   </td>
                 </tr>

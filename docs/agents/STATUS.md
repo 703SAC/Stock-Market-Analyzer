@@ -9,8 +9,9 @@
 | Python 런타임 | 🟢 | `python3` = 3.14.6. `python`/`py`는 Windows Store 스텁이라 작동 안 함 |
 | uv 환경 | 🟢 | `app/backend/pyproject.toml` + `uv.lock`(1916줄, 크로스플랫폼). `uv sync`/`uv run pytest`로 타 PC 재현 |
 | 검증 venv | 🟢 | `app/backend/.venv` = uv 관리(gitignore 대상) |
-| 테스트 결과 | 🟢 | `59 passed`, 2026-06-19 `uv run pytest` 실행 |
-| FastAPI 앱 | 🟢 | `create_app()` 정상, 신규 3개 에이전트 라우트 OpenAPI 등록 확인 |
+| 테스트 결과 | 🟢 | `66 passed`, 2026-06-20 `uv run pytest` 실행 |
+| 프론트 빌드 | 🟢 | node v24/npm11, `npm run build` 성공(11 routes, strict 타입체크 통과) |
+| FastAPI 앱 | 🟢 | `create_app()` 정상, 에이전트 3종 + context API OpenAPI 등록 확인 |
 | SQLite/SQLAlchemy | 🟢 | `storage/db.py` 작동 |
 
 ## 컴포넌트
@@ -35,7 +36,10 @@
 | LLM | OpenAI provider | 🟢 | `services/llm/openai_provider.py` | |
 | LLM | Claude(anthropic) provider | 🟢 | `services/llm/anthropic_provider.py` | Phase5, opt-in 자리(기본 비활성) |
 | API | 에이전트 라우트 3종 | 🟢 | `api/{strategy,briefing,monitor}.py` | Phase5 |
-| Frontend | api.ts 에이전트 클라이언트 | 🟢 | `app/frontend/lib/api.ts` | Phase5, 최소 연결 |
+| API | 맥락 저장소 읽기/시드 | 🟢 | `api/context.py` | FE연동, GET 4종 + 시드 POST 4종 |
+| Frontend | 에이전트 페이지 4종 | 🟢 | `app/frontend/app/{strategy,briefing,monitor,context}` | 전략/브리핑/모니터링/맥락뷰어 |
+| Frontend | 공통 컴포넌트 | 🟢 | `app/frontend/components/` | ReportView·CanSlimPanel·RawJsonToggle·ConfidenceBadge |
+| Frontend | 품질검증 UI | 🟢 | (각 페이지) | confidence·sources·원본JSON 토글 |
 
 ## Phase 진행
 | Phase | 상태 | 비고 |

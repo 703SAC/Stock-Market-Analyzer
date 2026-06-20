@@ -144,6 +144,12 @@ async def health():
 
         "llm_configured": llm.is_configured,
 
+        "telegram_configured": bool(
+            settings.telegram_bot_token and settings.telegram_chat_id
+        ),
+
+        "scheduler_enabled": settings.scheduler_enabled,
+
         "missing_optional_env": missing_env,
 
     }

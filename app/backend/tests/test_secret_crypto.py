@@ -46,7 +46,8 @@ def test_settings_decrypts_encrypted_env_values(monkeypatch):
     monkeypatch.setenv("SECRET_ENCRYPTION_KEY", _test_key())
     encrypted = encrypt_secret("naver-secret")
 
-    settings = Settings(naver_client_secret=encrypted)
+    # _env_file=None: 실제 .env(다른 키로 암호화됨)와 격리 — 이 테스트 키로만 복호화
+    settings = Settings(_env_file=None, naver_client_secret=encrypted)
 
     assert settings.naver_client_secret == "naver-secret"
 

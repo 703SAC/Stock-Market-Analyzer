@@ -7,6 +7,8 @@ export type HealthResponse = {
   news_configured: boolean;
   llm?: { provider: string; configured: boolean; model: string };
   llm_configured: boolean;
+  telegram_configured?: boolean;
+  scheduler_enabled?: boolean;
 };
 
 export type StockEvent = {
@@ -163,26 +165,134 @@ export async function createBriefing(body: {
   });
 }
 
+export type CanSlimResult = {
+  stock: { code: string; name?: string };
+  as_of: string;
+  checks: Record<string, boolean>;
+  score: number;
+  max_score: number;
+  passed: boolean;
+  metrics: Record<string, number>;
+  reasons: string[];
+  pending_fundamentals: string[];
+};
+
+export type DailyCandle = { date: string; close: number; volume?: number };
+
 // 전략 에이전트: 상한가/거래량 종목 인과관계 분석
 export async function analyzeCausality(body: {
   event: StockEvent;
   articles?: Article[];
-  candles?: { date: string; close: number; volume?: number }[];
-}): Promise<{ report: AnalysisReport; canslim: unknown }> {
+  candles?: DailyCandle[];
+}): Promise<{ report: AnalysisReport; canslim: CanSlimResult | null }> {
   return fetchApi("/api/strategy/causality", {
     method: "POST",
     body: JSON.stringify({ articles: [], candles: [], ...body }),
   });
 }
 
+export type MarketSession = "KR_DAY" | "US_NIGHT" | "GLOBAL";
+
+export type MarketDigest = {
+  id?: string;
+  digest_date: string;
+  session: MarketSession;
+  title: string;
+  summary: string;
+  key_themes: string[];
+  indices: Record<string, number>;
+  source: string;
+};
+
+export type DailyReportResult = {
+  digest: MarketDigest;
+  telegram: { status: string; [k: string]: unknown };
+  persisted: boolean;
+};
+
 // 모니터링 에이전트: 장마감 일일 리포트 트리거
 export async function runDailyReport(body: {
   base_date: string;
-  session?: "KR_DAY" | "US_NIGHT" | "GLOBAL";
+  session?: MarketSession;
   events?: StockEvent[];
-}): Promise<{ digest: unknown; telegram: unknown; persisted: boolean }> {
+}): Promise<DailyReportResult> {
   return fetchApi("/api/monitor/daily-report", {
     method: "POST",
     body: JSON.stringify({ session: "KR_DAY", events: [], ...body }),
   });
+}
+
+// --- 맥락 저장소 (메가 내러티브) 읽기/시드 ---
+
+export type CalendarEvent = {
+  id?: string;
+  event_date: string;
+  category: "EARNINGS" | "MACRO" | "DIVIDEND" | "IPO" | "POLICY" | "OTHER";
+  title: string;
+  stock_code?: string;
+  description?: string;
+  importance: "LOW" | "MEDIUM" | "HIGH";
+};
+
+export type GroupMapEntry = {
+  stock_code: string;
+  stock_name?: string;
+  group_name?: string;
+  themes: string[];
+  related_codes: string[];
+};
+
+export type NarrativeMemory = {
+  id?: string;
+  as_of_date: string;
+  topic: string;
+  narrative: string;
+  stock_codes: string[];
+  importance: "LOW" | "MEDIUM" | "HIGH";
+};
+
+export async function getDigests(params: {
+  before?: string;
+  session?: MarketSession;
+  limit?: number;
+}): Promise<MarketDigest[]> {
+  const q = new URLSearchParams();
+  if (params.before) q.set("before", params.before);
+  if (params.session) q.set("session", params.session);
+  if (params.limit) q.set("limit", String(params.limit));
+  return fetchApi(`/api/context/digests?${q}`);
+}
+
+export async function getEvents(params: {
+  start: string;
+  end: string;
+  stock_code?: string;
+}): Promise<CalendarEvent[]> {
+  const q = new URLSearchParams({ start: params.start, end: params.end });
+  if (params.stock_code) q.set("stock_code", params.stock_code);
+  return fetchApi(`/api/context/events?${q}`);
+}
+
+export async function getGroup(stockCode: string): Promise<GroupMapEntry | null> {
+  return fetchApi(`/api/context/group/${stockCode}`);
+}
+
+export async function getNarratives(params: {
+  before?: string;
+  stock_code?: string;
+  limit?: number;
+}): Promise<NarrativeMemory[]> {
+  const q = new URLSearchParams();
+  if (params.before) q.set("before", params.before);
+  if (params.stock_code) q.set("stock_code", params.stock_code);
+  if (params.limit) q.set("limit", String(params.limit));
+  return fetchApi(`/api/context/narratives?${q}`);
+}
+
+export async function seedEvent(body: Omit<CalendarEvent, "id">): Promise<CalendarEvent> {
+  return fetchApi("/api/context/events", { method: "POST", body: JSON.stringify(body) });
+}
+
+export async function seedGroup(body: GroupMapEntry): Promise<GroupMapEntry> {
+  return fetchApi("/api/context/group", { method: "POST", body: JSON.stringify(body) });
 }
