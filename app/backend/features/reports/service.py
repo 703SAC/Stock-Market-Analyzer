@@ -12,6 +12,9 @@ from storage.repositories import reports as report_repo
 
 
 class ReportService:
+    def __init__(self, llm=None):
+        self._llm = llm
+
     async def create_news_price_report(
         self, db: Session, body: NewsPriceReportRequest
     ) -> NewsPriceReportResponse:
@@ -42,7 +45,8 @@ class ReportService:
             price_context,
             articles_text,
         )
-        llm_result = await llm_adapter.generate_news_price_report(
+        llm = self._llm or llm_adapter.for_role("pro")
+        llm_result = await llm.generate_news_price_report(
             SYSTEM_PROMPT, user_prompt
         )
 

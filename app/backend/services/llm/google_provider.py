@@ -11,12 +11,20 @@ from pydantic import BaseModel
 
 from config import get_settings
 from services.llm.base import LlmProvider
+from services.llm.model_registry import LlmRole, model_for_role, normalize_role
 
 
 class GoogleLlmProvider(LlmProvider):
-    def __init__(self):
+    def __init__(
+        self,
+        model_override: str | None = None,
+        provider_name: str = "google",
+        role: LlmRole | str | None = None,
+    ):
         settings = get_settings()
-        self._model = settings.llm_model_resolved
+        self._role = normalize_role(role)
+        self._model = model_override or model_for_role(self._role, "google", settings)
+        self._provider_name = provider_name
         self._client = (
             genai.Client(api_key=settings.google_api_key)
             if settings.google_api_key
@@ -25,7 +33,7 @@ class GoogleLlmProvider(LlmProvider):
 
     @property
     def provider_name(self) -> str:
-        return "google"
+        return self._provider_name
 
     @property
     def is_configured(self) -> bool:
@@ -66,3 +74,10 @@ class GoogleLlmProvider(LlmProvider):
             except Exception as exc:
                 last_error = exc
         raise RuntimeError(f"Gemini response validation failed: {last_error}")
+
+
+class GoogleAdvancedLlmProvider(GoogleLlmProvider):
+    """Former Anthropic high-insight slot, now backed by Gemini 3.5 Flash."""
+
+    def __init__(self):
+        super().__init__(model_override="gemini-3.5-flash", provider_name="google_advanced")

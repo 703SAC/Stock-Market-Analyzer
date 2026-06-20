@@ -21,7 +21,7 @@ from storage.repositories import reports as report_repo
 
 class CausalityService:
     def __init__(self, llm=None, context_service_factory=None):
-        self._llm = llm if llm is not None else llm_adapter
+        self._llm = llm
         self._ctx_factory = context_service_factory or ContextService
 
     async def analyze(
@@ -41,7 +41,8 @@ class CausalityService:
         articles_text = "\n".join(f"- {a.title} ({a.url})" for a in req.articles)
         user_prompt = build_causal_prompt(event, context_block, articles_text, canslim)
 
-        result: CausalAnalysisJson = await self._llm.generate_structured(
+        llm = self._llm or llm_adapter.for_role("pro")
+        result: CausalAnalysisJson = await llm.generate_structured(
             CAUSAL_SYSTEM_PROMPT, user_prompt, CausalAnalysisJson
         )
 

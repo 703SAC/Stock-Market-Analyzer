@@ -43,17 +43,42 @@ def test_get_llm_provider_google(mock_settings):
     assert provider.provider_name == "google"
 
 
+@patch("services.llm.openrouter_provider.get_settings")
+@patch("services.llm.base.get_settings")
+def test_get_llm_provider_openrouter_role(mock_base_settings, mock_or_settings):
+    settings = MagicMock(
+        llm_provider="openrouter",
+        llm_default_role="flash",
+        llm_flash_model="flash-model",
+        llm_pro_model="pro-model",
+        llm_formatter_model="formatter-model",
+        llm_rerank_model="rerank-model",
+        openrouter_api_key="test-key",
+        openrouter_base_url="https://openrouter.ai/api/v1",
+    )
+    mock_base_settings.return_value = settings
+    mock_or_settings.return_value = settings
+    from services.llm.base import get_llm_provider
+    from services.llm.openrouter_provider import OpenRouterLlmProvider
+
+    provider = get_llm_provider("pro")
+    assert isinstance(provider, OpenRouterLlmProvider)
+    assert provider.provider_name == "openrouter"
+    assert provider.model_name == "pro-model"
+    assert provider.is_configured is True
+
+
 @patch("services.llm.base.get_settings")
 def test_get_llm_provider_anthropic_seat(mock_settings):
-    """Claude는 예약된 opt-in 자리: factory는 provider를 돌려주되 키 없으면 미설정."""
+    """Legacy anthropic slot is now backed by Gemini 3.5 Flash advanced mode."""
     mock_settings.return_value = MagicMock(llm_provider="anthropic")
-    from services.llm.anthropic_provider import ClaudeLlmProvider
     from services.llm.base import get_llm_provider
+    from services.llm.google_provider import GoogleAdvancedLlmProvider
 
     provider = get_llm_provider()
-    assert isinstance(provider, ClaudeLlmProvider)
-    assert provider.provider_name == "anthropic"
-    assert provider.is_configured is False  # 기본 환경에 ANTHROPIC_API_KEY 없음
+    assert isinstance(provider, GoogleAdvancedLlmProvider)
+    assert provider.provider_name == "google_advanced"
+    assert provider.model_name == "gemini-3.5-flash"
 
 
 @patch("services.llm.base.get_settings")
@@ -81,7 +106,7 @@ def test_openai_not_configured_without_key(mock_settings):
 def test_google_not_configured_without_key(mock_settings):
     mock_settings.return_value = MagicMock(
         google_api_key="",
-        llm_model_resolved="gemini-3.5-flash",
+        llm_model_resolved="gemini-2.5-flash",
     )
     from services.llm.google_provider import GoogleLlmProvider
 
@@ -128,7 +153,7 @@ async def test_openai_generate_parses_json(mock_settings):
 async def test_google_generate_parses_json(mock_settings, mock_to_thread):
     mock_settings.return_value = MagicMock(
         google_api_key="test-key",
-        llm_model_resolved="gemini-3.5-flash",
+        llm_model_resolved="gemini-2.5-flash",
     )
     payload = {
         "summary": "gemini 요약",
@@ -147,3 +172,43 @@ async def test_google_generate_parses_json(mock_settings, mock_to_thread):
     result = await provider.generate_news_price_report("sys", "user")
     assert result.summary == "gemini 요약"
     assert result.confidence == "HIGH"
+
+
+@patch("services.llm.openrouter_provider.get_settings")
+@pytest.mark.asyncio
+async def test_openrouter_generate_parses_json(mock_settings):
+    mock_settings.return_value = MagicMock(
+        llm_provider="openrouter",
+        llm_default_role="flash",
+        llm_flash_model="flash-model",
+        llm_pro_model="pro-model",
+        llm_formatter_model="formatter-model",
+        llm_rerank_model="rerank-model",
+        openrouter_api_key="test-key",
+        openrouter_base_url="https://openrouter.ai/api/v1",
+    )
+    payload = {
+        "summary": "openrouter 요약",
+        "key_points": ["a"],
+        "possible_reasons": [],
+        "risks": [],
+        "confidence": "MEDIUM",
+    }
+    response = MagicMock()
+    response.raise_for_status.return_value = None
+    response.json.return_value = {
+        "choices": [{"message": {"content": json.dumps(payload, ensure_ascii=False)}}]
+    }
+    client = MagicMock()
+    client.post = AsyncMock(return_value=response)
+
+    from services.llm.openrouter_provider import OpenRouterLlmProvider
+
+    provider = OpenRouterLlmProvider(role="formatter", client=client)
+    result = await provider.generate_news_price_report("sys", "user")
+
+    assert result.summary == "openrouter 요약"
+    assert result.confidence == "MEDIUM"
+    request = client.post.call_args.kwargs
+    assert request["json"]["model"] == "formatter-model"
+    assert request["json"]["response_format"]["type"] == "json_schema"

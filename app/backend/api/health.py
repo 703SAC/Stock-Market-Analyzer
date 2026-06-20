@@ -13,6 +13,7 @@ from services.kis.adapter import get_kis_adapter
 from services.kis.auth_status import check_kis_status
 
 from services.llm.adapter import get_llm_provider
+from services.llm.model_registry import role_model_map
 
 from storage.db import engine
 
@@ -34,7 +35,11 @@ def _llm_missing_env(settings) -> list[str]:
 
     if provider == "anthropic":
 
-        return [] if settings.anthropic_api_key else ["ANTHROPIC_API_KEY"]
+        return [] if settings.google_api_key else ["GOOGLE_API_KEY"]
+
+    if provider == "openrouter":
+
+        return [] if settings.openrouter_api_key else ["OPENROUTER_API_KEY"]
 
     return [] if settings.openai_api_key else ["OPENAI_API_KEY"]
 
@@ -71,6 +76,7 @@ async def health():
 
 
     llm = get_llm_provider()
+    llm_roles = role_model_map(settings.llm_provider)
 
     llm_missing = _llm_missing_env(settings)
 
@@ -132,6 +138,8 @@ async def health():
 
             "model": llm.model_name,
 
+            "roles": llm_roles,
+
         },
 
         "llm_configured": llm.is_configured,
@@ -139,4 +147,3 @@ async def health():
         "missing_optional_env": missing_env,
 
     }
-

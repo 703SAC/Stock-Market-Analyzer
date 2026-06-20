@@ -31,7 +31,7 @@ def _format_telegram(digest: MarketDigest) -> str:
 
 class MonitorService:
     def __init__(self, llm=None, notifier=None):
-        self._llm = llm if llm is not None else llm_adapter
+        self._llm = llm
         self._notifier = notifier  # None이면 호출 시점에 기본 notifier 사용
 
     async def run_daily_close(
@@ -46,7 +46,8 @@ class MonitorService:
         user_prompt = build_daily_report_prompt(
             base_date.isoformat(), session, events
         )
-        result: DailyDigestJson = await self._llm.generate_structured(
+        llm = self._llm or llm_adapter.for_role("flash")
+        result: DailyDigestJson = await llm.generate_structured(
             DAILY_SYSTEM_PROMPT, user_prompt, DailyDigestJson
         )
 

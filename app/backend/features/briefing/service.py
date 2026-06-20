@@ -18,7 +18,7 @@ from services.llm.schemas import MarketBriefingJson
 
 class BriefingService:
     def __init__(self, llm=None, context_service_factory=None):
-        self._llm = llm if llm is not None else llm_adapter
+        self._llm = llm
         self._ctx_factory = context_service_factory or ContextService
 
     async def create_briefing(
@@ -39,7 +39,8 @@ class BriefingService:
             profile, req.base_date.isoformat(), context_block, articles_text
         )
 
-        content: MarketBriefingJson = await self._llm.generate_structured(
+        llm = self._llm or llm_adapter.for_role("pro")
+        content: MarketBriefingJson = await llm.generate_structured(
             BRIEFING_SYSTEM_PROMPT, user_prompt, MarketBriefingJson
         )
 

@@ -32,8 +32,15 @@ class Settings(BaseSettings):
     llm_provider: str = "openai"
     openai_api_key: str = ""
     google_api_key: str = ""
-    anthropic_api_key: str = ""
+    openrouter_api_key: str = ""
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
     llm_model: str = ""
+    llm_advanced_model: str = ""
+    llm_default_role: str = "flash"
+    llm_flash_model: str = ""
+    llm_pro_model: str = ""
+    llm_formatter_model: str = ""
+    llm_rerank_model: str = ""
     telegram_bot_token: str = ""
     telegram_chat_id: str = ""
     cors_origins: str = "http://localhost:3000"
@@ -65,10 +72,23 @@ class Settings(BaseSettings):
             return self.llm_model.strip()
         provider = (self.llm_provider or "openai").lower().strip()
         if provider == "google":
-            return "gemini-3.5-flash"
+            return "gemini-2.5-flash"
         if provider == "anthropic":
-            return "claude-sonnet-4-6"
+            return "gemini-3.5-flash"
+        if provider == "openrouter":
+            return self.llm_flash_model or "meta-llama/llama-3.2-3b-instruct:free"
         return "gpt-4o-mini"
+
+    @property
+    def llm_advanced_model_resolved(self) -> str:
+        if self.llm_advanced_model and self.llm_advanced_model.strip():
+            return self.llm_advanced_model.strip()
+        provider = (self.llm_provider or "openai").lower().strip()
+        if provider == "google":
+            return "gemini-3.5-flash"
+        if provider == "openrouter":
+            return self.llm_pro_model or "meta-llama/llama-3.3-70b-instruct:free"
+        return self.llm_model_resolved
 
     @property
     def database_path_resolved(self) -> Path:

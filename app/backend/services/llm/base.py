@@ -6,6 +6,7 @@ from typing import TypeVar
 from pydantic import BaseModel
 
 from config import get_settings
+from services.llm.model_registry import LlmRole, normalize_role
 from services.llm.schemas import NewsPriceReportJson
 
 T = TypeVar("T", bound=BaseModel)
@@ -42,9 +43,10 @@ class LlmProvider(ABC):
         )
 
 
-def get_llm_provider() -> LlmProvider:
+def get_llm_provider(role: LlmRole | str | None = None) -> LlmProvider:
     settings = get_settings()
     provider = (settings.llm_provider or "openai").lower().strip()
+    role = normalize_role(role)
 
     if provider == "openai":
         from services.llm.openai_provider import OpenAiLlmProvider
@@ -53,16 +55,23 @@ def get_llm_provider() -> LlmProvider:
     if provider == "google":
         from services.llm.google_provider import GoogleLlmProvider
 
-        return GoogleLlmProvider()
+        return GoogleLlmProvider(role=role)
     if provider == "anthropic":
-        from services.llm.anthropic_provider import ClaudeLlmProvider
+        from services.llm.google_provider import GoogleAdvancedLlmProvider
 
-        return ClaudeLlmProvider()
+        return GoogleAdvancedLlmProvider()
+    if provider == "openrouter":
+        from services.llm.openrouter_provider import OpenRouterLlmProvider
+
+        return OpenRouterLlmProvider(role=role)
     raise ValueError(f"Unsupported LLM provider: {settings.llm_provider}")
 
 
 class _LlmAdapterProxy:
     """Backward-compatible module-level `llm_adapter` accessor."""
+
+    def for_role(self, role: LlmRole | str) -> LlmProvider:
+        return get_llm_provider(role)
 
     def __getattr__(self, name: str):
         return getattr(get_llm_provider(), name)
